@@ -1,14 +1,18 @@
-import os
+import os, json
 import pandas as pd
 from datetime import datetime
 
 def load_all_data(campaign_name="data"):
     data_rows = {}
     data_dir = f"data/{campaign_name}"
+    players = dict()
     for folder in sorted(os.listdir(data_dir)):
         if not folder.startswith(f"{campaign_name}_"):
             continue
         folder_path = os.path.join(data_dir, folder)
+        with open(os.path.join(folder_path, "metadata.json"), "r") as f:
+            metadata = json.load(f)
+            players.update({p[0]:p[2] for p in metadata["players"]})
         # Extract date from folder name
         try:
             date_str = folder.replace(f"{campaign_name}_", "")
@@ -33,5 +37,5 @@ def load_all_data(campaign_name="data"):
     for key, data_row in data_rows.items():
         data_rows[key] = pd.concat(data_row, ignore_index=True)
         full_df[key] = data_rows[key]
-
-    return full_df
+    print(players)
+    return full_df, players
