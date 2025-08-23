@@ -23,7 +23,7 @@ app = dash.Dash(__name__)
 server = app.server
 
 app.layout = html.Div([
-    html.H1("Time-Series Data Viewer"),
+    html.H1("Garibaldi Web Plotter"),
 
     dcc.Dropdown(
         id='data-label-dropdown',
@@ -40,7 +40,20 @@ app.layout = html.Div([
         )
     ], style={'width': '50vw', 'display': 'inline-block', 'verticalAlign': 'top'}),
     dcc.Graph(id='time-series-plot'),
-    html.Div(id='country-values-table')
+    dash_table.DataTable(
+        id='country-values-table',
+        editable=True,
+        filter_action="native",
+        sort_action="native",
+        sort_mode="multi",
+        column_selectable="single",
+        row_selectable="multi",
+        selected_columns=[],
+        selected_rows=[],
+        page_action="native",
+        page_current= 0,
+        page_size= 20,
+    )
 ])
 
 # Get all unique countries from all dfs
@@ -50,7 +63,8 @@ for df in dfs.values():
 all_countries = sorted(all_countries)
 
 @app.callback(
-    Output('country-values-table', 'children'),
+    Output('country-values-table', 'data'),
+    Output('country-values-table', 'columns'),
     Input('data-label-dropdown', 'value')
 )
 def update_country_table(selected_label):
@@ -68,33 +82,14 @@ def update_country_table(selected_label):
     # table_df = latest_df[['country', selected_label]].drop_duplicates()
     table_df = latest_df.sort_values(selected_label, ascending=False)
 
-    value_table = dash_table.DataTable(
-        id='country-values-table',
-        columns=[
-            {"name": i, "id": i, "deletable": True, "selectable": True} for i in table_df.columns
-        ],
-        data=table_df.to_dict('records'),
-        editable=True,
-        filter_action="native",
-        sort_action="native",
-        sort_mode="multi",
-        column_selectable="single",
-        row_selectable="multi",
-        selected_columns=[],
-        selected_rows=[],
-        page_action="native",
-        page_current= 0,
-        page_size= 20,
-    )
-
-    return value_table
+    return table_df.to_dict('records'), [{"name": i, "id": i, "deletable": True, "selectable": True} for i in table_df.columns]
 
 @app.callback(
     Output('time-series-plot', 'figure'),
     Input('data-label-dropdown', 'value'),
     Input('player-lines-checkbox', 'value'),
     Input('country-values-table', 'derived_virtual_selected_rows'),
-    Input('country-values-table', 'data')
+    Input('country-values-table', 'derived_virtual_data')
 )
 def update_plot(selected_label, player_lines_value, selected_rows, table_data):
     # Find the first df that contains the selected label
