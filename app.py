@@ -41,7 +41,7 @@ app.layout = html.Div([
 
     dcc.Dropdown(
         id='data-label-dropdown',
-        options=[{'label': f"{group.replace(".csv", "")}/{label}", 'value': label}for (group, labels) in all_data_labels.items() for label in labels],
+        options=[{'label': f"{group.replace('.csv', '')}/{label}", 'value': label}for (group, labels) in all_data_labels.items() for label in labels],
         value="GDP"
     ),
     # html.Div([
