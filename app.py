@@ -4,20 +4,34 @@ import pandas as pd
 import plotly.express as px
 from loader import load_all_data  # move loader function here
 from src.helpers.color import get_color as tag_to_colors
-from src.helpers.utility import jopen
+import os
+import gdown
+import zipfile
+
+FILE_ID = os.getenv("FILE_ID")
+CAMPAIGN_NAME = os.getenv("CAMPAIGN_NAME", "data")
+url = f"https://drive.google.com/uc?id={FILE_ID}"
+
+if not "saves" in os.listdir("."):
+    os.mkdir("saves")
+if FILE_ID and "lock" not in os.listdir("saves/"):
+    output = f"./saves/{CAMPAIGN_NAME}.zip"
+    gdown.download(url, output, quiet=False)
+
+    with zipfile.ZipFile(output, "r") as zf:
+        zf.extractall(f"saves/")
 
 colors_df = pd.read_csv("tag_colors.csv")
-user_variables = jopen("./user_variables.json")
-dfs, players = load_all_data(user_variables["Campaign Folder"])
+dfs, players = load_all_data(CAMPAIGN_NAME)
 # get only the first entry of dfs dict
 key1 = list(dfs.keys())
 print(colors_df.head())
 
 # Collect all unique data labels from all dfs
-all_data_labels = set()
-for df in dfs.values():
-    all_data_labels.update(df.columns.drop(['id', 'tag', 'country', 'date'], errors='ignore'))
-all_data_labels = sorted(all_data_labels)
+all_data_labels = dict()
+for key, df in dfs.items():
+    all_data_labels[key] = set(df.columns.drop(['id', 'tag', 'country', 'date'], errors='ignore'))
+# all_data_labels = sorted(all_data_labels)
 
 app = dash.Dash(__name__)
 server = app.server
@@ -27,18 +41,18 @@ app.layout = html.Div([
 
     dcc.Dropdown(
         id='data-label-dropdown',
-        options=[{'label': label, 'value': label} for label in all_data_labels],
-        value=all_data_labels[0] if all_data_labels else None
+        options=[{'label': f"{group.replace(".csv", "")}/{label}", 'value': label}for (group, labels) in all_data_labels.items() for label in labels],
+        value="GDP"
     ),
-    html.Div([
-        html.Label("Show player lines only:"),
-        dcc.Checklist(
-            id='player-lines-checkbox',
-            options=[{'label': '', 'value': 'players_only'}],
-            value=['players_only'],
-            inline=True
-        )
-    ], style={'width': '50vw', 'display': 'inline-block', 'verticalAlign': 'top'}),
+    # html.Div([
+    #     html.Label("Show player lines only:"),
+    #     dcc.Checklist(
+    #         id='player-lines-checkbox',
+    #         options=[{'label': '', 'value': 'players_only'}],
+    #         value=['players_only'],
+    #         inline=True
+    #     )
+    # ], style={'width': '50vw', 'display': 'inline-block', 'verticalAlign': 'top'}),
     dcc.Graph(id='time-series-plot'),
     dash_table.DataTable(
         id='country-values-table',
@@ -87,11 +101,12 @@ def update_country_table(selected_label):
 @app.callback(
     Output('time-series-plot', 'figure'),
     Input('data-label-dropdown', 'value'),
-    Input('player-lines-checkbox', 'value'),
+    # Input('player-lines-checkbox', 'value'),
     Input('country-values-table', 'derived_virtual_selected_rows'),
     Input('country-values-table', 'derived_virtual_data')
 )
-def update_plot(selected_label, player_lines_value, selected_rows, table_data):
+# def update_plot(selected_label, player_lines_value, selected_rows, table_data):
+def update_plot(selected_label, selected_rows, table_data):
     # Find the first df that contains the selected label
     for df in dfs.values():
         if selected_label in df.columns:
@@ -101,11 +116,11 @@ def update_plot(selected_label, player_lines_value, selected_rows, table_data):
     else:
         return px.line(title="No data available for selected label.")
 
-    player_ids = set(str(pid) for pid in players.keys())
-    show_players_only = 'players_only' in (player_lines_value or [])
+    # player_ids = set(str(pid) for pid in players.keys())
+    # show_players_only = 'players_only' in (player_lines_value or [])
 
-    if show_players_only:
-        plot_df = plot_df[plot_df['id'].astype(str).isin(player_ids)]
+    # if show_players_only:
+    #     plot_df = plot_df[plot_df['id'].astype(str).isin(player_ids)]
 
     # Filter by selected countries from table
     if selected_rows is not None and table_data is not None and len(selected_rows) > 0:
@@ -156,4 +171,4 @@ def update_plot(selected_label, player_lines_value, selected_rows, table_data):
     return fig
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(port=5000)
