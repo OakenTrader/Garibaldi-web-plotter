@@ -19,7 +19,8 @@ if FILE_ID and "lock" not in os.listdir("saves/"):
     gdown.download(url, output, quiet=False)
 
     with zipfile.ZipFile(output, "r") as zf:
-        zf.extractall(f"saves/")
+        os.mkdir(f"saves/{CAMPAIGN_NAME}", exist_ok=True)
+        zf.extractall(f"saves/{CAMPAIGN_NAME}")
 
 colors_df = pd.read_csv("tag_colors.csv")
 dfs, players = load_all_data(CAMPAIGN_NAME)
