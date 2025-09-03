@@ -2,7 +2,7 @@ import os, json
 import pandas as pd
 from datetime import datetime
 
-allowed_columns = ["id", "tag", "country", "date", "GDP", "GDP per capita", "debt_percentage", "population", "literacy", "standard of living", "construction", "avg_cost", "innovation", "capped_innovation", "naval_innovation", "military_innovation", "army_experience", "ratio", "total", "army projection", "navy projection", "total_techs", "production_techs", "military_techs", "society_techs", "tech_points", "researching"]
+allowed_columns = ["id", "tag", "country", "date", "GDP", "GDP per capita", "debt_percentage", "population", "literacy", "standard of living", "construction", "avg_cost", "innovation", "capped_innovation", "innovation ratio", "total", "army projection", "navy projection", "total_techs", "production_techs", "military_techs", "society_techs", "tech_points", "researching"]
 
 def load_all_data(campaign_name="data"):
     data_rows = {}
