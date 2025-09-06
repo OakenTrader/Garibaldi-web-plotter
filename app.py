@@ -2,9 +2,10 @@ import dash
 from dash import html, dcc, Input, Output, dash_table
 import pandas as pd
 import plotly.express as px
-from loader import load_all_data  # move loader function here
+from src.loader import load_all_data
+from src.pinger import start_pinging
 from src.helpers.color import get_color as tag_to_colors
-import os
+import os, threading
 import gdown
 import zipfile
 
@@ -173,3 +174,6 @@ def update_plot(selected_label, selected_rows, table_data):
 
 if __name__ == "__main__":
     app.run(port=5000)
+    # Start the pinger in a separate thread or process
+    threading.Thread(target=start_pinging, daemon=True).start()
+
