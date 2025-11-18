@@ -25,6 +25,8 @@ def load_all_data(campaign_name="data"):
         # Load CSVs inside this folder
         data_path = os.path.join(folder_path, "data")
         for fname in os.listdir(data_path):
+            if "missing_techs" in fname:
+                continue
             if not fname.endswith(".csv"):
                 continue
             fpath = os.path.join(data_path, fname)
