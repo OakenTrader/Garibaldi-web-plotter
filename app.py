@@ -20,8 +20,16 @@ if FILE_ID and "lock" not in os.listdir("saves/"):
     gdown.download(url, output, quiet=False)
 
     with zipfile.ZipFile(output, "r") as zf:
-        os.makedirs(f"saves/{CAMPAIGN_NAME}", exist_ok=True)
-        zf.extractall(f"saves/{CAMPAIGN_NAME}")
+        zf.extractall("saves")
+
+    # Write lock file so workers don't re-download on restart
+    with open("saves/lock", "w") as lf:
+        lf.write("downloaded")
+
+    # Debug: show what was extracted
+    print("Extracted zip contents:")
+    for root, dirs, files in os.walk(f"saves/{CAMPAIGN_NAME}"):
+        print(f"  {root}/", dirs[:5], files[:5])
 
 colors_df = pd.read_csv("tag_colors.csv")
 dfs, players = load_all_data(CAMPAIGN_NAME)
@@ -90,7 +98,7 @@ def update_country_table(selected_label):
             plot_df = df
             break
     else:
-        return html.Div("No data available.")
+        return [], []
 
     latest_date = plot_df['date'].max()
     latest_df = plot_df[plot_df['date'] == latest_date]
