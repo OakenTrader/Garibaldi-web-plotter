@@ -20,7 +20,7 @@ if FILE_ID and "lock" not in os.listdir("saves/"):
     gdown.download(url, output, quiet=False)
 
     with zipfile.ZipFile(output, "r") as zf:
-        zf.extractall("saves")
+        zf.extractall(f"saves/{CAMPAIGN_NAME}")
 
     # Write lock file so workers don't re-download on restart
     with open("saves/lock", "w") as lf:
