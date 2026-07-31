@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "dash>=3.1.1",
+    "dotenv>=0.9.9",
     "gdown>=6.0.0",
     "pandas>=2.3.1",
 ]
